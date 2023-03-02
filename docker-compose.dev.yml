@@ -1,0 +1,65 @@
+version: '3.1'
+
+services:
+
+  postgres:
+    image: postgres:15
+    volumes:
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+    env_file:
+      - ./.env.dev
+  
+  mongo:
+    image: mongo:5.0.15   
+    ports:
+      - 27017:27017
+    volumes:
+      - mongo_data:/data/db
+    depends_on:
+      - postgres 
+    env_file:
+      - .env.dev
+
+  redis:
+    image: redis:7.0.8
+    restart: always
+    ports:
+      - 6379:6379    
+    volumes: 
+      - redis_data:/data
+    depends_on:
+      - mongo 
+  
+  etl_local_mongo:
+    build: 
+      context: ./etl_local_mongo
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./etl_local_mongo:/etl_local_mongo
+    depends_on:
+      - redis 
+    env_file:
+      - .env.dev
+
+  django:
+    build:
+      context: ./django
+      dockerfile: Dockerfile.dev  
+    volumes:         
+      - ./django:/django
+    ports:
+      - 8000:8000
+    env_file:
+      - .env.dev
+    depends_on:
+      - redis
+
+volumes:
+  postgres_data:
+  mongo_data:
+  redis_data:
+  
+    

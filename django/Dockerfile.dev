@@ -1,0 +1,34 @@
+# base image
+FROM python:3.10
+
+# environment variables
+ENV TZ=Europe/Moscow
+ENV APP_HOME=/django
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV DJANGO_SETTINGS_MODULE 'config.settings'
+
+# working directory
+WORKDIR $APP_HOME
+
+# install dependancies
+RUN apt-get update && \
+    apt-get install -y gettext && \
+    apt install tzdata && \
+    apt install -y ncat && \
+    python -m pip install --upgrade pip && \
+    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
+    pip3 install poetry 
+
+# ad code
+COPY . $APP_HOME
+
+# install peotry dep
+RUN poetry config virtualenvs.create false
+RUN poetry install 
+
+# change mode of entrypoint
+RUN chmod +x ./docker-entrypoint.dev.sh
+
+# entrypoint for django
+ENTRYPOINT ["./docker-entrypoint.dev.sh"]

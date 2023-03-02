@@ -1,0 +1,7 @@
+.env.dev
+__pycache__/
+__init__.py
+migrations/
+etl_local2mongo.log
+games/
+ml/
